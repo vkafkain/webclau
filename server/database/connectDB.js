@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const { User } = require("../models/User");
-const { Product } = require("../models/Product");
+// const { User } = require("../schemas/UserSchema");
+// const { Product } = require("../schemas/ProductSchema");
 
 const connectDB = async () => {
   try {

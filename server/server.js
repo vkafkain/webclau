@@ -1,13 +1,27 @@
-const express = require("express");
-const app = express();
-const connectDB = require("./database/connectDB");
-require("dotenv").config();
+require('dotenv').config();
 const PORT = process.env.SERVER_PORT;
+const express = require('express');
+const app = express();
+const connectDB = require('./database/connectDB');
+const routes = require('./routes/index');
+// const cors = require('cors');
 
+//Connect to database
 connectDB();
 
-app.get("/", (req, res) => {
-  res.send("hello world");
+//Middleware
+app.use(express.json());
+app.use(
+  express.urlencoded({
+    extended: false,
+  })
+);
+
+//Routes
+app.use(routes);
+
+app.get('/', function (req, res) {
+  res.send('Server Up');
 });
 
 app.listen(PORT, () => {
