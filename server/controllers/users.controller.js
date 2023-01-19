@@ -1,13 +1,13 @@
 const JWT = require('jsonwebtoken');
-const { User } = require('../schemas/UserSchema');
+const { User, validateUser } = require('../schemas/UserSchema');
 const { hashPassword } = require('../utils/utils');
 const argon2 = require('argon2');
 
-//TODO user controllers
-//TODO add validators
 //TODO check http status code
 
 exports.registerUser = async (req, res) => {
+  const { error } = validateUser(req.body)
+  if(error) return res.status(400).send(error.details[0].message) 
   const { userName, email, password } = req.body;
   try {
     let user = await User.findOne({ email });
@@ -109,9 +109,38 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-/* exports.updateUser = async (req, res) => {
-  const { name, email, password } = req.body;
+exports.updateUser = async (req, res) => {
+  const { error } = validateUser(req.body)
+  if(error) return res.status(400).send(error.details[0].message)
+  const { userName, email, password } = req.body;
   try {
-  } catch (err) {}
+    let user = await User.findOne({ email })
+
+    if(!user) return res.status(404).json({
+      succes: false,
+      msg: "User not found"
+    })
+    user.userName = userName;
+    user.email = email;
+    if(password) {
+      user.password = await hashPassword(password);
+    }
+    await user.save();
+
+    return res.status(200).json({
+      succes:true,
+      msg: 'User updated succesfully'
+    })
+  } catch (err) {
+    console.error(err.message);
+    return res.status(500).json({
+      succes:false,
+      msg: 'Server error'
+    })
+  }
 };
- */
+
+exports.changePassword = async (req, res) => {
+  
+}
+ 

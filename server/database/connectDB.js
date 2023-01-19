@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 // const { User } = require("../schemas/UserSchema");
 // const { Product } = require("../schemas/ProductSchema");
 
+
+//TODO usar docker para la db
+
+
 const connectDB = async () => {
   try {
     mongoose.set("strictQuery", false);
