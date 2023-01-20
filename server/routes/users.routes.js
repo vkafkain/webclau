@@ -45,7 +45,6 @@ router.get('/users', UsersController.getUsers);
  * @example request - Payload example
  * {
     "name": "name",
-    "lastnames":"surname",
     "email": "email@email.com",
     "password": "8charactersOneNumberOnespecial!"
 }

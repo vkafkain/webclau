@@ -8,7 +8,7 @@ const argon2 = require('argon2');
 exports.registerUser = async (req, res) => {
   const { error } = validateUser(req.body)
   if(error) return res.status(400).send(error.details[0].message) 
-  const { userName, email, password } = req.body;
+  const { email, userName, password } = req.body;
   try {
     let user = await User.findOne({ email });
     if (user) {
@@ -20,7 +20,6 @@ exports.registerUser = async (req, res) => {
       email: email,
       password: hashedPassword,
     });
-    console.log(newUser);
     const payload = {
       user: {
         id: newUser._id,
@@ -32,6 +31,8 @@ exports.registerUser = async (req, res) => {
     res.status(201).send({
       status: 'ok',
       message: `User registered correctly`,
+      newUser,
+      token,
     });
   } catch (err) {
     console.error(err.message);
