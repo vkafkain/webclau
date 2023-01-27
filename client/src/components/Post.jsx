@@ -1,25 +1,23 @@
-export function Post() {
+import { formatISO9075 } from 'date-fns';
+import { Link } from 'react-router-dom';
+
+export function Post({_id, title, summary, cover, content, createdAt, author }) {
   return (
     <div className="post">
       <div className="image">
-        <img src="https://as1.ftcdn.net/v2/jpg/05/05/94/46/1000_F_505944656_bDxox5xmlMWq2S5x8Q9lutGw7BBKmzKK.jpg"></img>
+        <Link to={`/post/${_id}`}>
+          <img src={'http://localhost:3000/' + cover}></img>
+        </Link>
       </div>
       <div className="texts">
-        <h2>Sunt enim commodo et aliquip sint tempor officia.</h2>
+      <Link to={`/post/${_id}`}>
+        <h2>{title}</h2>
+      </Link>
         <p className="info">
-          <a className="author">Minerva Lopez</a>
-          <time>27-12-2020 03:34</time>
+          <a className="author">{author.email}</a>
+          <time>{formatISO9075(new Date(createdAt))}</time>
         </p>
-        <p className="summary">
-          Lorem amet aute quis consectetur fugiat consequat consectetur magna
-          sit. Deserunt sit incididunt aliqua aliquip fugiat tempor nostrud esse
-          voluptate fugiat tempor aliqua consectetur nisi. Commodo proident enim
-          consequat excepteur id consequat. Duis id eu culpa anim anim in sint
-          nisi consectetur culpa culpa adipisicing fugiat. Voluptate id pariatur
-          qui minim laboris nulla ex deserunt magna Lorem duis. Cupidatat ut
-          adipisicing commodo laborum nulla et ullamco excepteur reprehenderit
-          occaecat id.
-        </p>
+        <p className="summary">{summary}</p>
       </div>
     </div>
   );
