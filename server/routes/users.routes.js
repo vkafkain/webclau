@@ -1,5 +1,7 @@
 const UsersController = require('../controllers/users.controller');
 const router = require('express').Router();
+const multer = require('multer');
+const uploadMiddleware = multer({ dest: 'uploads/' })
 
 //userSchema
 //UserControllers
@@ -146,6 +148,67 @@ router.post('/login', UsersController.loginUser)
  */
 
 // router.post('/recover-password', UsersController.receiveEmailGetToken)
+
+
+/**
+ * GET /profile
+ * @summary Get profile
+ * @tags Users
+ * @security bearerAuth
+ * @return {object} 200 - success response - application/json
+ * @return {object} 400 - Bad request response
+ */
+router.get('/profile', UsersController.checkCookies);
+
+/**
+ * POST /logout
+ * @summary Logout user
+ * @tags Users
+ * @security bearerAuth
+ * @return {object} 200 - success response - application/json
+ * @return {object} 400 - Bad request response
+ */
+router.post('/logout', UsersController.logout);
+
+/**
+ * POST /post
+ * @summary Post post
+ * @tags Post
+ * @security bearerAuth
+ * @return {object} 200 - success response - application/json
+ * @return {object} 400 - Bad request response
+ */
+router.post('/post', uploadMiddleware.single('file'), UsersController.post);
+
+/**
+ * PUT /post
+ * @summary Put post
+ * @tags Post
+ * @security bearerAuth
+ * @return {object} 200 - success response - application/json
+ * @return {object} 400 - Bad request response
+ */
+router.put('/post', uploadMiddleware.single('file'), UsersController.put);
+
+/**
+ * GET /post
+ * @summary Get posts
+ * @tags Post
+ * @security bearerAuth
+ * @return {object} 200 - success response - application/json
+ * @return {object} 400 - Bad request response
+ */
+router.get('/post', UsersController.getPosts);
+
+/**
+ * GET /post/:id
+ * @summary Get post
+ * @tags Post
+ * @security bearerAuth
+ * @return {object} 200 - success response - application/json
+ * @return {object} 400 - Bad request response
+ */
+router.get('/post/:id', UsersController.getPost);
 
 
 module.exports = router;

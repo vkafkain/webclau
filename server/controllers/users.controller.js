@@ -2,12 +2,14 @@ const JWT = require('jsonwebtoken');
 const { User, validateUser } = require('../schemas/UserSchema');
 const { hashPassword } = require('../utils/utils');
 const argon2 = require('argon2');
+const fs = require('fs');
+const { Post } = require('../schemas/PostSchema');
 
 //TODO check http status code
 
 exports.registerUser = async (req, res) => {
-  const { error } = validateUser(req.body)
-  if(error) return res.status(400).send(error.details[0].message) 
+  const { error } = validateUser(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
   const { email, userName, password } = req.body;
   try {
     let user = await User.findOne({ email });
@@ -43,7 +45,6 @@ exports.registerUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
   try {
     const users = await User.find();
-    console.log(users);
     res.status(200).json(users);
   } catch (err) {
     console.error(err.message);
@@ -93,15 +94,15 @@ exports.loginUser = async (req, res) => {
   const isMatch = await argon2.verify(user.password, password);
   if (isMatch) {
     const payload = {
-      userId: user._id,
+      id: user._id,
       email: user.email,
     };
-    const accesToken = JWT.sign(payload, process.env.JWT_SECRET);
+    const token = JWT.sign(payload, process.env.JWT_SECRET);
 
+    res.cookie('token', token, { httpOnly: true });
     return res.status(200).json({
-      payload: payload,
-      accesToken: accesToken,
-      msg: 'user logged',
+      id: user._id,
+      email,
     });
   } else {
     return res
@@ -111,37 +112,117 @@ exports.loginUser = async (req, res) => {
 };
 
 exports.updateUser = async (req, res) => {
-  const { error } = validateUser(req.body)
-  if(error) return res.status(400).send(error.details[0].message)
+  const { error } = validateUser(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
   const { userName, email, password } = req.body;
   try {
-    let user = await User.findOne({ email })
+    let user = await User.findOne({ email });
 
-    if(!user) return res.status(404).json({
-      succes: false,
-      msg: "User not found"
-    })
+    if (!user)
+      return res.status(404).json({
+        succes: false,
+        msg: 'User not found',
+      });
     user.userName = userName;
     user.email = email;
-    if(password) {
+    if (password) {
       user.password = await hashPassword(password);
     }
     await user.save();
 
     return res.status(200).json({
-      succes:true,
-      msg: 'User updated succesfully'
-    })
+      succes: true,
+      msg: 'User updated succesfully',
+    });
   } catch (err) {
     console.error(err.message);
     return res.status(500).json({
-      succes:false,
-      msg: 'Server error'
-    })
+      succes: false,
+      msg: 'Server error',
+    });
   }
 };
 
-exports.changePassword = async (req, res) => {
-  
+exports.checkCookies = async (req, res) => {
+  const { token } = req.cookies;
+  if (!token) {
+    return res.status(401).json({ error: 'Token not provided' });
+  }
+  try {
+    const decoded = JWT.verify(token, process.env.JWT_SECRET);
+    res.json(decoded);
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+exports.logout = async (req, res) => {
+  res.cookie('token', '').json('ok');
+};
+
+exports.post = async (req, res) => {
+  const { originalname, path } = req.file;
+  const parts = originalname.split('.');
+  const ext = parts[parts.length - 1];
+  const newPath = path + '.' + ext;
+  fs.renameSync(path, newPath);
+
+  const { token } = req.cookies;
+  JWT.verify(token, process.env.JWT_SECRET, {}, async (err, info) => {
+    if (err) throw err;
+    const { title, summary, content } = req.body;
+    const postDoc = await Post.create({
+      title,
+      summary,
+      content,
+      cover: newPath,
+      author: info.id,
+    });
+    res.json( postDoc );
+  });
+};
+
+exports.put = async (req, res) => {
+  let newPatch = null;
+  if(req.file) {
+    const { originalname, path } = req.file;
+    const parts = originalname.split('.');
+    const ext = parts[parts.length - 1];
+    const newPath = path + '.' + ext;
+    fs.renameSync(path, newPath);
+  }
+  const { token } = req.cookies;
+  JWT.verify(token, process.env.JWT_SECRET, {}, async (err, info) => {
+    if (err) throw err;
+    const {id, title, summary, content } = req.body;
+    const postDoc = await Post.findById(id);
+    const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id)
+    if(!isAuthor){
+      return res.status(400).json('you are not the author')
+    }
+    await postDoc.updateOne({
+      title,
+      summary,
+      content,
+      cover: newPatch ? newPatch : postDoc.cover,
+    })
+    res.json( postDoc );
+  })
+};
+
+exports.getPosts = async (req, res) => {
+  res.json(
+    await Post.find()
+      .populate('author', ['email'])
+      .sort({createdAt: -1})
+      .limit(20)
+  );
 }
- 
+
+exports.getPost = async (req, res) => {
+  const { id } = req.params
+  const postDoc = await Post.findById(id).populate('author', ['email']);
+  res.json(postDoc)
+}
+
+exports.changePassword = async (req, res) => {};
