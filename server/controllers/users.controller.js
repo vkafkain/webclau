@@ -183,12 +183,12 @@ exports.post = async (req, res) => {
 };
 
 exports.put = async (req, res) => {
-  let newPatch = null;
+  let newPath = null;
   if(req.file) {
     const { originalname, path } = req.file;
     const parts = originalname.split('.');
     const ext = parts[parts.length - 1];
-    const newPath = path + '.' + ext;
+    newPath = path + '.' + ext;
     fs.renameSync(path, newPath);
   }
   const { token } = req.cookies;
@@ -204,9 +204,9 @@ exports.put = async (req, res) => {
       title,
       summary,
       content,
-      cover: newPatch ? newPatch : postDoc.cover,
+      cover: newPath ? newPath : postDoc.cover,
     })
-    res.json( postDoc );
+    res.status(200).json( postDoc );
   })
 };
 
