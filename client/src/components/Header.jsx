@@ -34,7 +34,7 @@ export function Header() {
         {email && (
           <>
             <Link to='/create'>Create new post</Link>
-            <a onClick={logout}>Logout</a>
+            <a onClick={logout}>Logout ({email})</a>
           </>
         )}
         {!email && (
